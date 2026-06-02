@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Ditado Inteligente - Treine sua ortografia de forma divertida!" />
+  <meta name="theme-color" content="#4A90D9" />
+  <title>Ditado Inteligente</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="src/css/variables.css" />
+  <link rel="stylesheet" href="src/css/layout.css" />
+  <link rel="stylesheet" href="src/css/components.css" />
+  <link rel="stylesheet" href="src/css/responsive.css" />
+</head>
+<body>
+
+  <!-- Canvas de confetes (sobreposto) -->
+  <canvas id="confetti-canvas" aria-hidden="true"></canvas>
+
+  <!-- Decoração de fundo -->
+  <div class="bg-decoration" aria-hidden="true">
+    <div class="deco-circle deco-circle-1"></div>
+    <div class="deco-circle deco-circle-2"></div>
+    <div class="deco-circle deco-circle-3"></div>
+  </div>
+
+  <!-- Ícones flutuantes decorativos -->
+  <div class="floating-icons" aria-hidden="true">
+    <span class="float-icon">📚</span>
+    <span class="float-icon">✏️</span>
+    <span class="float-icon">⭐</span>
+    <span class="float-icon">📝</span>
+    <span class="float-icon">🎒</span>
+    <span class="float-icon">🔤</span>
+    <span class="float-icon">📖</span>
+    <span class="float-icon">🏅</span>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════
+       APP PRINCIPAL
+  ════════════════════════════════════════════════════ -->
+  <div id="app" role="main">
+
+    <!-- TELA 1: HOME / CONFIGURAÇÃO -->
+    <section
+      id="screen-home"
+      class="screen"
+      aria-label="Tela de configuração do ditado"
+    ></section>
+
+    <!-- TELA 2: DITADO -->
+    <section
+      id="screen-dictation"
+      class="screen"
+      aria-label="Tela de ditado"
+    ></section>
+
+    <!-- TELA 3: RESULTADO -->
+    <section
+      id="screen-result"
+      class="screen"
+      aria-label="Tela de resultado"
+    ></section>
+
+  </div><!-- /#app -->
+
+  <!-- ═══════════════════════════════════════════════════
+       SCRIPTS — modelos, serviços, componentes, telas, app
+  ════════════════════════════════════════════════════ -->
+
+  <!-- Modelos -->
+  <script src="src/js/models/Word.js"></script>
+  <script src="src/js/models/GameSession.js"></script>
+
+  <!-- Utilitários -->
+  <script src="src/js/utils/helpers.js"></script>
+
+  <!-- Serviços -->
+  <script src="src/js/services/WordService.js"></script>
+  <script src="src/js/services/SpeechService.js"></script>
+  <script src="src/js/services/ValidationService.js"></script>
+  <script src="src/js/services/StorageService.js"></script>
+  <script src="src/js/services/ConfettiService.js"></script>
+
+  <!-- Componentes -->
+  <script src="src/js/components/Button.js"></script>
+  <script src="src/js/components/ProgressBar.js"></script>
+  <script src="src/js/components/WordInput.js"></script>
+  <script src="src/js/components/ResultGrid.js"></script>
+
+  <!-- Telas -->
+  <script src="src/js/screens/HomeScreen.js"></script>
+  <script src="src/js/screens/DictationScreen.js"></script>
+  <script src="src/js/screens/ResultScreen.js"></script>
+
+  <!-- Motor -->
+  <script src="src/js/core/GameEngine.js"></script>
+
+  <!-- Ponto de entrada -->
+  <script src="src/js/core/App.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,146 @@
+/* ===== RESPONSIVE ===== */
+
+/* --- 768px: Tablet --- */
+@media (max-width: 768px) {
+  :root {
+    --text-5xl: 2.8rem;
+    --text-4xl: 2.2rem;
+    --text-3xl: 1.7rem;
+  }
+
+  .screen-content {
+    gap: var(--space-lg);
+  }
+
+  .word-count-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .word-count-btn {
+    min-height: 70px;
+    padding: var(--space-sm) var(--space-xs);
+  }
+
+  .word-count-btn__number {
+    font-size: var(--text-xl);
+  }
+
+  .btn--lg {
+    min-width: 240px;
+    font-size: var(--text-xl);
+    padding: var(--space-lg) var(--space-2xl);
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .action-buttons .btn {
+    width: 100%;
+  }
+
+  .result-score-card {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+/* --- 480px: Large Mobile --- */
+@media (max-width: 480px) {
+  :root {
+    --text-5xl: 2.4rem;
+    --text-4xl: 2rem;
+    --text-3xl: 1.5rem;
+    --text-2xl: 1.3rem;
+  }
+
+  .screen {
+    padding: var(--space-md) var(--space-md);
+  }
+
+  .app-logo {
+    margin-top: var(--space-lg);
+  }
+
+  .logo-icon {
+    font-size: 3.2rem;
+  }
+
+  /* Hide table, show cards on mobile */
+  .error-table { display: none; }
+  .error-cards  { display: flex; }
+
+  .word-count-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .word-input {
+    font-size: var(--text-2xl);
+    padding: var(--space-md) var(--space-lg);
+  }
+
+  .dictation-card {
+    padding: var(--space-lg);
+    gap: var(--space-lg);
+  }
+
+  .score-circle {
+    width: 80px; height: 80px;
+  }
+
+  .score-circle__pct {
+    font-size: var(--text-xl);
+  }
+
+  .result-score-card {
+    gap: var(--space-lg);
+  }
+
+  .float-icon {
+    display: none;
+  }
+}
+
+/* --- 375px: Standard Mobile --- */
+@media (max-width: 375px) {
+  :root {
+    --text-5xl: 2.2rem;
+    --text-4xl: 1.8rem;
+  }
+
+  .word-count-btn__number {
+    font-size: var(--text-lg);
+  }
+
+  .btn--lg {
+    font-size: var(--text-lg);
+    padding: var(--space-md) var(--space-xl);
+  }
+}
+
+/* --- 320px: Smallest Supported --- */
+@media (max-width: 320px) {
+  :root {
+    --text-5xl: 2rem;
+  }
+
+  .word-count-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* --- Large Desktop --- */
+@media (min-width: 1024px) {
+  .screen {
+    padding: var(--space-xl) var(--space-xl);
+  }
+
+  .word-count-grid {
+    gap: var(--space-md);
+  }
+
+  .word-count-btn {
+    min-height: 100px;
+    padding: var(--space-lg) var(--space-md);
+  }
+}
