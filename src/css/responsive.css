@@ -1,5 +1,11 @@
 /* ===== RESPONSIVE ===== */
 
+/* ===== BASE: todos os botões são seguros por padrão ===== */
+.btn {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 /* --- 768px: Tablet --- */
 @media (max-width: 768px) {
   :root {
@@ -25,18 +31,11 @@
     font-size: var(--text-xl);
   }
 
-  .btn--lg {
-    min-width: 240px;
-    font-size: var(--text-xl);
-    padding: var(--space-lg) var(--space-2xl);
-  }
+  /* btn--lg já usa width:100% + max-width, ok */
 
   .action-buttons {
     flex-direction: column;
-  }
-
-  .action-buttons .btn {
-    width: 100%;
+    align-items: stretch;
   }
 
   .result-score-card {
@@ -48,10 +47,11 @@
 /* --- 480px: Large Mobile --- */
 @media (max-width: 480px) {
   :root {
-    --text-5xl: 2.4rem;
-    --text-4xl: 2rem;
-    --text-3xl: 1.5rem;
-    --text-2xl: 1.3rem;
+    --text-5xl: 2.2rem;
+    --text-4xl: 1.9rem;
+    --text-3xl: 1.45rem;
+    --text-2xl: 1.2rem;
+    --text-xl: 1.05rem;
   }
 
   .screen {
@@ -63,29 +63,43 @@
   }
 
   .logo-icon {
-    font-size: 3.2rem;
+    font-size: 3rem;
+  }
+
+  /* Subtitle não sobrepõe o grid */
+  .section-subtitle {
+    margin-top: 0;
+    margin-bottom: var(--space-xs);
   }
 
   /* Hide table, show cards on mobile */
   .error-table { display: none; }
   .error-cards  { display: flex; }
 
+  /* Grid 3 colunas no mobile */
   .word-count-grid {
     grid-template-columns: repeat(3, 1fr);
   }
 
   .word-input {
-    font-size: var(--text-2xl);
-    padding: var(--space-md) var(--space-lg);
+    font-size: var(--text-xl);
+    padding: var(--space-md) var(--space-md);
   }
 
   .dictation-card {
-    padding: var(--space-lg);
-    gap: var(--space-lg);
+    padding: var(--space-md);
+    gap: var(--space-md);
+  }
+
+  /* Botões no card de ditado: largura total */
+  .dictation-card .btn {
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .score-circle {
-    width: 80px; height: 80px;
+    width: 80px;
+    height: 80px;
   }
 
   .score-circle__pct {
@@ -93,39 +107,70 @@
   }
 
   .result-score-card {
-    gap: var(--space-lg);
+    gap: var(--space-md);
+  }
+
+  /* Botão "Jogar Novamente" e similares: cabe na tela */
+  .btn--lg {
+    font-size: var(--text-base);
+    padding: var(--space-md) var(--space-lg);
+    max-width: 100%;
+    width: 100%;
   }
 
   .float-icon {
     display: none;
+  }
+
+  /* Ação em coluna no mobile */
+  .action-buttons {
+    flex-direction: column;
+    align-items: stretch;
   }
 }
 
 /* --- 375px: Standard Mobile --- */
 @media (max-width: 375px) {
   :root {
-    --text-5xl: 2.2rem;
-    --text-4xl: 1.8rem;
+    --text-5xl: 2rem;
+    --text-4xl: 1.7rem;
+    --text-3xl: 1.3rem;
   }
 
   .word-count-btn__number {
-    font-size: var(--text-lg);
+    font-size: var(--text-base);
   }
 
-  .btn--lg {
-    font-size: var(--text-lg);
-    padding: var(--space-md) var(--space-xl);
+  .word-count-btn__label {
+    font-size: 0.65rem;
+  }
+
+  .screen {
+    padding: var(--space-sm) var(--space-sm);
   }
 }
 
 /* --- 320px: Smallest Supported --- */
 @media (max-width: 320px) {
   :root {
-    --text-5xl: 2rem;
+    --text-5xl: 1.8rem;
   }
 
   .word-count-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* --- Tablet grande / Desktop --- */
+@media (min-width: 769px) {
+  .action-buttons {
+    flex-direction: row;
+  }
+
+  /* Limita largura dos botões em desktop para não ficarem exagerados */
+  .action-buttons .btn {
+    flex: 0 1 auto;
+    min-width: 180px;
   }
 }
 
@@ -142,5 +187,12 @@
   .word-count-btn {
     min-height: 100px;
     padding: var(--space-lg) var(--space-md);
+  }
+
+  .btn--lg {
+    font-size: var(--text-xl);
+    padding: var(--space-lg) var(--space-2xl);
+    width: auto;
+    max-width: 420px;
   }
 }

@@ -42,12 +42,10 @@ class HomeScreen {
         </div>
         ` : ''}
 
-        <div>
+        <div class="word-count-section">
           <h2 class="section-title">Quantas palavras?</h2>
           <p class="section-subtitle">Escolha a quantidade para praticar</p>
-        </div>
-
-        <div class="word-count-grid" id="word-count-grid" role="group" aria-label="Escolha a quantidade de palavras">
+          <div class="word-count-grid" id="word-count-grid" role="group" aria-label="Escolha a quantidade de palavras">
           ${[10, 20, 30, 40, 50].map(n => `
             <button
               class="word-count-btn ${n === this._selectedCount ? 'selected' : ''}"
@@ -59,6 +57,7 @@ class HomeScreen {
               <span class="word-count-btn__label">palavras</span>
             </button>
           `).join('')}
+          </div>
         </div>
 
         <button

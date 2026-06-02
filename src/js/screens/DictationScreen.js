@@ -60,7 +60,7 @@ class DictationScreen {
             <button
               class="btn btn--primary"
               id="btn-confirm"
-              style="flex:1; min-width:200px;"
+
               aria-label="Confirmar palavra e avançar"
             >
               <span class="btn__icon">✔</span>
