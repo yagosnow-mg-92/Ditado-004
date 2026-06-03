@@ -1052,37 +1052,34 @@
    TECLADO VIRTUAL
    ======================================================== */
 
-.vkb-wrapper {
+/* ── Root: posicionamento relativo para o painel de acentos ── */
+.vkb-root {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: 6px;
+  position: relative;   /* ancora o accent-panel absoluto */
   user-select: none;
   -webkit-user-select: none;
+  touch-action: manipulation;
 }
 
-/* ── Display da palavra ── */
+/* ── Display: altura FIXA — nunca muda de tamanho ── */
 .vkb-display {
   width: 100%;
-  min-height: 58px;
+  height: 56px;               /* altura fixa, não min-height */
   background: var(--color-off-white);
   border: 3px solid var(--color-blue-light);
   border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-sm) var(--space-md);
-  box-shadow: 0 0 0 4px rgba(74,144,217,0.12);
-  transition: border-color var(--transition-md);
+  padding: 0 var(--space-md);
+  box-sizing: border-box;
+  /* Sem box-shadow nem transition que causam reflow */
 }
 
-.vkb-display.disabled {
-  border-color: var(--color-light-gray);
-  box-shadow: none;
-  opacity: 0.6;
-}
-
-.vkb-display__text {
+.vkb-display__inner {
   font-family: var(--font-display);
   font-size: var(--text-2xl);
   color: var(--color-dark);
@@ -1090,22 +1087,31 @@
   display: flex;
   align-items: center;
   gap: 1px;
+  pointer-events: none;
 }
 
 .vkb-display__chars {
   letter-spacing: 2px;
 }
 
+.vkb-placeholder {
+  color: var(--color-light-gray);
+  font-size: var(--text-lg);
+  font-family: var(--font-body);
+  letter-spacing: 0;
+}
+
 /* Cursor piscante */
 .vkb-cursor {
   display: inline-block;
   width: 2px;
-  height: 1.2em;
+  height: 1.1em;
   background: var(--color-blue);
   border-radius: 2px;
   animation: blink 1s step-end infinite;
   margin-left: 2px;
   vertical-align: middle;
+  flex-shrink: 0;
 }
 
 @keyframes blink {
@@ -1113,7 +1119,20 @@
   50%       { opacity: 0; }
 }
 
-/* ── Board ── */
+/* ── Dica: ocupa espaço fixo, apenas visibility muda ── */
+.vkb-hint {
+  height: 18px;               /* altura fixa */
+  font-size: 0.72rem;
+  color: var(--color-gray);
+  text-align: center;
+  font-weight: 700;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  /* visibility toggled via JS — não muda layout */
+}
+
+/* ── Board: dimensões totalmente estáticas ── */
 .vkb-board {
   width: 100%;
   display: flex;
@@ -1123,17 +1142,19 @@
 
 .vkb-row {
   display: flex;
-  gap: 5px;
+  gap: 4px;
   justify-content: center;
+  width: 100%;
 }
 
-/* ── Teclas ── */
+/* ── Tecla base ── */
 .vkb-key {
   all: unset;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  height: 44px;
   border-radius: 8px;
   font-family: var(--font-body);
   font-weight: 800;
@@ -1141,105 +1162,93 @@
   color: var(--color-dark);
   background: var(--color-white);
   border: 2px solid var(--color-light-gray);
-  box-shadow: 0 3px 0 var(--color-light-gray);
-  transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+  box-shadow: 0 3px 0 #d0d8e4;
   flex: 1;
   min-width: 0;
-  height: 44px;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  box-sizing: border-box;
+  /* Sem transition de tamanho/posição */
+  transition: background 0.08s, opacity 0.08s;
 }
 
 .vkb-key:active,
-.vkb-key.pressed {
-  background: var(--color-light-gray);
+.vkb-key--pressing {
+  background: #dce8f5 !important;
+  box-shadow: none !important;
   transform: translateY(2px);
-  box-shadow: none;
 }
 
-.vkb-key:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+/* ── Ponto azul em teclas com acento ── */
+.vkb-key--has-accent {
+  position: relative;
+}
+.vkb-key--has-accent::after {
+  content: '';
+  position: absolute;
+  bottom: 4px; right: 5px;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--color-blue-light);
+  pointer-events: none;
 }
 
-/* Teclas de ação (shift, back) */
+/* ── Shift ── */
 .vkb-key--action {
-  background: var(--color-off-white);
-  color: var(--color-dark);
-  font-size: 1.1rem;
+  background: #f0f4f8;
   flex: 1.5;
 }
-
-/* Shift ativo */
-.vkb-key--shift-active {
+.vkb-key--shift-on {
   background: var(--color-blue-light) !important;
   color: var(--color-white) !important;
   border-color: var(--color-blue) !important;
 }
 
-/* Botão de acentos */
+/* ── Botão Á ── */
 .vkb-key--accent-btn {
-  background: var(--color-yellow-light);
+  background: #fff8d6;
   border-color: var(--color-yellow);
-  color: var(--color-dark);
-  font-size: 1rem;
   flex: 1.5;
 }
 
-/* Espaço */
+/* ── Espaço ── */
 .vkb-key--space {
   flex: 4;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--color-gray);
-  letter-spacing: 1px;
   text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-/* Confirmar */
+/* ── Confirmar ── */
 .vkb-key--confirm {
   flex: 2;
   background: var(--grad-green);
   color: var(--color-white);
   border-color: var(--color-green-dark);
-  font-size: 0.95rem;
   box-shadow: 0 3px 0 var(--color-green-dark);
+  font-size: 0.95rem;
 }
-
 .vkb-key--confirm:active {
-  background: var(--color-green-dark);
-  box-shadow: none;
   transform: translateY(2px);
+  box-shadow: none;
 }
 
-/* Tecla larga */
-.vkb-key--wide {
-  flex: none;
-  width: 100%;
-  height: 40px;
-  border-radius: var(--radius-md);
-  margin-top: var(--space-xs);
-}
-
-/* Fechar painel */
-.vkb-key--cancel {
-  background: var(--color-off-white);
-  color: var(--color-gray);
-  border-color: var(--color-light-gray);
-  font-size: 0.9rem;
-}
-
-/* ── Painel de acentos ── */
+/* ── Painel de acentos: ABSOLUTO, sobrepõe sem mover nada ── */
 .vkb-accent-panel {
   display: none;
-  flex-direction: column;
-  gap: var(--space-sm);
+  position: absolute;
+  bottom: 0;
+  left: 0; right: 0;
   background: var(--color-white);
   border: 2.5px solid var(--color-yellow);
   border-radius: var(--radius-lg);
   padding: var(--space-md);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
+  z-index: 50;
+  flex-direction: column;
+  gap: var(--space-sm);
 }
-
 .vkb-accent-panel.open {
   display: flex;
 }
@@ -1251,118 +1260,83 @@
   text-align: center;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  margin: 0;
 }
 
 .vkb-accent-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
   justify-content: center;
 }
 
 .vkb-key--char {
-  flex: none;
-  width: 46px;
-  height: 46px;
+  flex: none !important;
+  width: 48px;
+  height: 48px;
   font-size: 1.3rem;
   border-radius: var(--radius-md);
-  background: var(--color-off-white);
-  border-color: var(--color-light-gray);
 }
 
-/* ── Responsivo ── */
-@media (max-width: 400px) {
-  .vkb-key {
-    height: 40px;
-    font-size: 0.9rem;
-    border-radius: 6px;
-  }
-
-  .vkb-row { gap: 4px; }
-  .vkb-board { gap: 4px; }
-
-  .vkb-display__text {
-    font-size: var(--text-xl);
-  }
-}
-
-@media (max-width: 340px) {
-  .vkb-key {
-    height: 36px;
-    font-size: 0.82rem;
-  }
-}
-
-@media (min-width: 600px) {
-  .vkb-key {
-    height: 50px;
-    font-size: 1.1rem;
-    border-radius: 10px;
-  }
-
-  .vkb-display__text {
-    font-size: var(--text-3xl);
-  }
-}
-
-/* ── Listen button full-width inside audio-zone ── */
-.btn--listen {
-  width: 100%;
-  box-sizing: border-box;
-  padding: var(--space-md) var(--space-xl);
-  font-size: var(--text-base);
-}
-
-/* ── Dictation card com teclado: menos padding, gap menor ── */
-.dictation-card {
-  gap: var(--space-md) !important;
-  padding: var(--space-md) !important;
-}
-
-/* screen-content no ditado não precisa de gap grande */
-.screen-content--dictation {
-  gap: var(--space-md);
-  padding-bottom: var(--space-md);
-}
-
-/* ── Dica de pressão longa ── */
-.vkb-hint {
-  font-size: var(--text-xs);
-  color: var(--color-gray);
-  text-align: center;
-  font-weight: 700;
-  padding: 2px 0;
-  transition: opacity 0.4s ease;
-}
-
-/* ── Teclas com acento disponível: ponto indicador ── */
-.vkb-key--has-accent {
-  position: relative;
-}
-
-.vkb-key--has-accent::after {
-  content: '';
-  position: absolute;
-  bottom: 4px;
-  right: 5px;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--color-blue-light);
-}
-
-/* ── Animação de pressão longa ── */
-.vkb-key.pressing {
-  background: var(--color-blue-light) !important;
-  color: var(--color-white) !important;
-  transform: scale(0.93);
-  transition: transform 0.1s, background 0.1s;
-}
-
-/* ── Letra base no painel (sem acento) destacada ── */
+/* Letra sem acento (base) destacada em azul */
 .vkb-key--char-base {
   background: var(--color-blue) !important;
   color: var(--color-white) !important;
   border-color: var(--color-blue-dark) !important;
-  font-weight: 900;
+}
+
+/* Botão fechar painel */
+.vkb-key--cancel-accent {
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 38px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-light-gray);
+  background: var(--color-off-white);
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: var(--text-sm);
+  color: var(--color-gray);
+  margin-top: 2px;
+  touch-action: manipulation;
+}
+
+/* ── Responsivo ── */
+@media (max-width: 400px) {
+  .vkb-key        { height: 40px; font-size: 0.88rem; }
+  .vkb-display    { height: 50px; }
+  .vkb-display__inner { font-size: var(--text-xl); }
+  .vkb-board      { gap: 4px; }
+  .vkb-row        { gap: 3px; }
+}
+
+@media (max-width: 340px) {
+  .vkb-key        { height: 36px; font-size: 0.8rem; border-radius: 6px; }
+  .vkb-hint       { font-size: 0.65rem; }
+}
+
+@media (min-width: 600px) {
+  .vkb-key        { height: 50px; font-size: 1.1rem; border-radius: 10px; }
+  .vkb-display    { height: 64px; }
+  .vkb-display__inner { font-size: var(--text-3xl); }
+}
+
+
+/* ── Dois botões de áudio lado a lado ── */
+.audio-btn-row {
+  display: flex;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.btn--audio-half {
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-sm) var(--space-sm);
+  font-size: var(--text-base);
+  box-sizing: border-box;
 }

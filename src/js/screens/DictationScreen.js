@@ -1,27 +1,21 @@
 /**
- * DictationScreen - Tela de ditado palavra por palavra.
- * Usa VirtualKeyboard para evitar sugestões do teclado nativo do celular.
+ * DictationScreen - Tela de ditado.
+ * Usa VirtualKeyboard (sem teclado nativo) e dois botões de áudio:
+ *   🔊 Ouvir  — repete a palavra isolada
+ *   💬 Na frase — fala uma frase contextualizando a palavra
  */
 class DictationScreen {
-  /**
-   * @param {HTMLElement} el
-   * @param {SpeechService} speechService
-   * @param {{ onFinish: Function }} callbacks
-   */
-  constructor(el, speechService, { onFinish }) {
-    this._el         = el;
-    this._speech     = speechService;
-    this._onFinish   = onFinish;
-    this._session    = null;
-    this._progressBar = null;
-    this._keyboard   = null;
-    this._isSpeaking = false;
+  constructor(el, speechService, sentenceService, { onFinish }) {
+    this._el              = el;
+    this._speech          = speechService;
+    this._sentences       = sentenceService;
+    this._onFinish        = onFinish;
+    this._session         = null;
+    this._progressBar     = null;
+    this._keyboard        = null;
+    this._isSpeaking      = false;
   }
 
-  /**
-   * Inicializa a tela com uma sessão.
-   * @param {GameSession} session
-   */
   startSession(session) {
     this._session = session;
     this._render();
@@ -36,42 +30,44 @@ class DictationScreen {
         <!-- Barra de progresso -->
         <div id="progress-container" style="width:100%;"></div>
 
-        <!-- Card principal -->
+        <!-- Card de ditado -->
         <div class="dictation-card">
 
-          <!-- Zona de áudio: ondas + botão ouvir -->
-          <div class="audio-zone">
-            <div class="audio-wave idle" id="audio-wave">
-              <div class="wave-bar"></div>
-              <div class="wave-bar"></div>
-              <div class="wave-bar"></div>
-              <div class="wave-bar"></div>
-              <div class="wave-bar"></div>
-              <div class="wave-bar"></div>
-              <div class="wave-bar"></div>
-            </div>
-            <button
-              class="btn btn--secondary btn--listen"
-              id="btn-repeat"
-              aria-label="Ouvir a palavra novamente"
-            >
+          <!-- Ondas de áudio -->
+          <div class="audio-wave idle" id="audio-wave">
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+          </div>
+
+          <!-- Dois botões de áudio lado a lado -->
+          <div class="audio-btn-row">
+            <button class="btn btn--secondary btn--audio-half" id="btn-repeat"
+              aria-label="Ouvir a palavra novamente">
               <span class="btn__icon">🔊</span>
-              Ouvir Novamente
+              Ouvir
+            </button>
+            <button class="btn btn--orange btn--audio-half" id="btn-sentence"
+              aria-label="Ouvir a palavra em uma frase">
+              <span class="btn__icon">💬</span>
+              Na frase
             </button>
           </div>
 
-          <!-- Teclado virtual (inclui display + teclas + botão OK) -->
+          <!-- Teclado virtual -->
           <div id="keyboard-container" style="width:100%;"></div>
 
         </div>
       </div>
     `;
 
-    // Progress bar
     const progressContainer = this._el.querySelector('#progress-container');
     this._progressBar = new ProgressBar(progressContainer);
 
-    // Teclado virtual
     const keyboardContainer = this._el.querySelector('#keyboard-container');
     this._keyboard = new VirtualKeyboard(keyboardContainer, {
       onConfirm: () => this._handleConfirm(),
@@ -83,10 +79,13 @@ class DictationScreen {
 
   _bindEvents() {
     this._el.querySelector('#btn-repeat').addEventListener('click', () => {
-      this._speakCurrentWord();
+      if (!this._isSpeaking) this._speakCurrentWord();
     });
 
-    // Callbacks de fala
+    this._el.querySelector('#btn-sentence').addEventListener('click', () => {
+      if (!this._isSpeaking) this._speakInSentence();
+    });
+
     this._speech
       .onStart(() => {
         this._isSpeaking = true;
@@ -103,11 +102,9 @@ class DictationScreen {
   }
 
   _loadWord() {
-    const session = this._session;
-    const word    = session.currentWord();
+    const word = this._session.currentWord();
     if (!word) return;
-
-    this._progressBar.update(session.currentIndex + 1, session.totalWords());
+    this._progressBar.update(this._session.currentIndex + 1, this._session.totalWords());
     this._keyboard.reset();
     this._keyboard.setEnabled(false);
     this._speakCurrentWord();
@@ -115,19 +112,23 @@ class DictationScreen {
 
   _speakCurrentWord() {
     const word = this._session.currentWord();
+    if (word) this._speech.speak(word.text);
+  }
+
+  _speakInSentence() {
+    const word = this._session.currentWord();
     if (!word) return;
-    this._speech.speak(word.text);
+    const sentence = this._sentences.getSentence(word.text);
+    this._speech.speak(sentence, { rate: 0.82 });
   }
 
   _handleConfirm() {
     if (this._isSpeaking) return;
-
     const session = this._session;
     const word    = session.currentWord();
     if (!word) return;
 
-    const answer = this._keyboard.getValue();
-    word.setAnswer(answer);
+    word.setAnswer(this._keyboard.getValue());
     session.advance();
 
     if (session.isFinished()) {
@@ -139,14 +140,6 @@ class DictationScreen {
     }
   }
 
-  /** Mostra a tela */
-  show() {
-    this._el.classList.add('active');
-  }
-
-  /** Esconde a tela */
-  hide() {
-    this._speech.cancel();
-    this._el.classList.remove('active');
-  }
+  show() { this._el.classList.add('active'); }
+  hide() { this._speech.cancel(); this._el.classList.remove('active'); }
 }

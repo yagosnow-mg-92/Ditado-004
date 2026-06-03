@@ -1,10 +1,11 @@
 /**
  * VirtualKeyboard - Teclado virtual em português.
  *
- * Comportamento:
- *   - Toque rápido  → digita a letra (a, e, i, o, u, c, n sem acento)
- *   - Pressão longa → abre painel de variantes acentuadas
- *   - Botão Á       → abre painel com TODOS os caracteres especiais
+ * Regras de layout estável:
+ *  - Nenhum elemento muda de display/height ao digitar ou ao habilitar/desabilitar
+ *  - A dica usa visibility (não display/opacity que causam reflow)
+ *  - O painel de acentos sobrepõe o teclado (position absolute) → não empurra nada
+ *  - setEnabled só altera pointer-events + opacidade leve, sem mover nada
  */
 class VirtualKeyboard {
   constructor(container, { onConfirm, onChange }) {
@@ -12,26 +13,25 @@ class VirtualKeyboard {
     this._onConfirm = onConfirm;
     this._onChange  = onChange || (() => {});
 
-    this._value      = '';
-    this._shift      = false;
-    this._enabled    = true;
+    this._value    = '';
+    this._shift    = false;
+    this._enabled  = true;
+    this._hintDone = false;
 
-    // Teclas com variantes acentuadas (pressão longa)
     this._accentMap = {
-      a: ['á','â','ã','à','ä'],
-      e: ['é','ê','è','ë'],
-      i: ['í','î','ì','ï'],
-      o: ['ó','ô','õ','ò','ö'],
-      u: ['ú','û','ù','ü'],
+      a: ['á','â','ã','à'],
+      e: ['é','ê','è'],
+      i: ['í','î','ì'],
+      o: ['ó','ô','õ','ò'],
+      u: ['ú','û','ù'],
       c: ['ç'],
       n: ['ñ'],
     };
     this._accentFlat = Object.values(this._accentMap).flat();
 
-    // Controle de pressão longa
-    this._longPressTimer  = null;
-    this._longPressDelay  = 400; // ms
-    this._didLongPress    = false;
+    this._longPressTimer = null;
+    this._longPressDelay = 420;
+    this._didLongPress   = false;
 
     this._rows = [
       ['q','w','e','r','t','y','u','i','o','p'],
@@ -43,25 +43,21 @@ class VirtualKeyboard {
     this._render();
   }
 
-  /* ─── Render ────────────────────────────────────────────── */
+  /* ─── Render ─────────────────────────────────────────────── */
 
   _render() {
     this._container.innerHTML = `
-      <div class="vkb-wrapper">
+      <div class="vkb-root">
 
-        <!-- Display -->
-        <div class="vkb-display" id="vkb-display" aria-live="polite">
-          <span class="vkb-display__text" id="vkb-text">
-            <span class="vkb-cursor"></span>
-          </span>
+        <!-- Display: altura FIXA, nunca muda -->
+        <div class="vkb-display" id="vkb-display">
+          <span class="vkb-display__inner" id="vkb-text"></span>
         </div>
 
-        <!-- Dica de pressão longa -->
-        <p class="vkb-hint" id="vkb-hint">
-          💡 Segure uma vogal para ver acentos
-        </p>
+        <!-- Dica: visibilidade controlada, mas altura FIXA (sempre ocupa espaço) -->
+        <p class="vkb-hint" id="vkb-hint">💡 Segure vogal para acentos</p>
 
-        <!-- Teclado -->
+        <!-- Board: dimensões fixas -->
         <div class="vkb-board" id="vkb-board">
           ${this._rows.map(row => `
             <div class="vkb-row">
@@ -70,20 +66,18 @@ class VirtualKeyboard {
           `).join('')}
         </div>
 
-        <!-- Painel de acentos -->
+        <!-- Painel de acentos: SOBREPÕE o board (position absolute) -->
         <div class="vkb-accent-panel" id="vkb-accent-panel" aria-hidden="true">
-          <div class="vkb-accent-title" id="vkb-accent-title">Escolha o acento</div>
+          <p class="vkb-accent-title" id="vkb-accent-title">Escolha o acento</p>
           <div class="vkb-accent-grid" id="vkb-accent-grid"></div>
-          <button class="vkb-key vkb-key--wide vkb-key--cancel" data-key="ACCENT_CLOSE">
-            ✕ Fechar
-          </button>
+          <button class="vkb-key vkb-key--cancel-accent" data-key="ACCENT_CLOSE">✕ Fechar</button>
         </div>
 
       </div>
     `;
 
     this._boardEl     = this._container.querySelector('#vkb-board');
-    this._displayText = this._container.querySelector('#vkb-text');
+    this._displayInner= this._container.querySelector('#vkb-text');
     this._accentPanel = this._container.querySelector('#vkb-accent-panel');
     this._accentGrid  = this._container.querySelector('#vkb-accent-grid');
     this._accentTitle = this._container.querySelector('#vkb-accent-title');
@@ -94,77 +88,76 @@ class VirtualKeyboard {
   }
 
   _renderKey(key) {
-    const hasAccents = this._accentMap[key] ? ' vkb-key--has-accent' : '';
+    const accent = this._accentMap[key] ? ' vkb-key--has-accent' : '';
     switch (key) {
       case 'SHIFT':
         return `<button class="vkb-key vkb-key--action" data-key="SHIFT" aria-label="Maiúsculas">⇧</button>`;
       case 'BACK':
         return `<button class="vkb-key vkb-key--action" data-key="BACK" aria-label="Apagar">⌫</button>`;
       case 'ACCENT':
-        return `<button class="vkb-key vkb-key--action vkb-key--accent-btn" data-key="ACCENT" aria-label="Todos os acentos">Á</button>`;
+        return `<button class="vkb-key vkb-key--accent-btn" data-key="ACCENT" aria-label="Acentos">Á</button>`;
       case 'SPACE':
         return `<button class="vkb-key vkb-key--space" data-key="SPACE" aria-label="Espaço">espaço</button>`;
       case 'CONFIRM':
         return `<button class="vkb-key vkb-key--confirm" data-key="CONFIRM" aria-label="Confirmar">✔ OK</button>`;
       default:
-        return `<button class="vkb-key${hasAccents}" data-key="${key}" aria-label="${key}">${key}</button>`;
+        return `<button class="vkb-key${accent}" data-key="${key}">${key}</button>`;
     }
   }
 
-  /* ─── Events ────────────────────────────────────────────── */
+  /* ─── Events ─────────────────────────────────────────────── */
 
   _bindEvents() {
-    const el = this._container;
+    const root = this._container;
 
-    // Início do toque/clique
-    el.addEventListener('pointerdown', e => {
+    root.addEventListener('pointerdown', e => {
       const btn = e.target.closest('[data-key]');
       if (!btn) return;
       e.preventDefault();
 
       const key = btn.dataset.key;
+      if (!this._enabled && key !== 'ACCENT_CLOSE') return;
 
-      // Para teclas com acento: inicia timer de pressão longa
-      if (this._accentMap[key.toLowerCase()] && key.length === 1) {
+      // Long-press só para teclas com acento
+      if (this._accentMap[key] && key.length === 1) {
         this._didLongPress = false;
-        btn.classList.add('pressing');
+        btn.classList.add('vkb-key--pressing');
         this._longPressTimer = setTimeout(() => {
           this._didLongPress = true;
-          btn.classList.remove('pressing');
-          if (this._enabled) this._openAccentPanel(key.toLowerCase());
+          btn.classList.remove('vkb-key--pressing');
+          this._openAccentPanel(key);
         }, this._longPressDelay);
       }
     });
 
-    // Fim do toque/clique
-    el.addEventListener('pointerup', e => {
+    root.addEventListener('pointerup', e => {
       const btn = e.target.closest('[data-key]');
+      clearTimeout(this._longPressTimer);
       if (!btn) return;
       e.preventDefault();
 
+      btn.classList.remove('vkb-key--pressing');
       const key = btn.dataset.key;
-      btn.classList.remove('pressing');
-      clearTimeout(this._longPressTimer);
+      if (!this._enabled && key !== 'ACCENT_CLOSE') { this._didLongPress = false; return; }
 
-      // Só executa ação se não foi pressão longa
-      if (!this._didLongPress && this._enabled) {
-        this._handleKey(key);
+      if (!this._didLongPress) this._handleKey(key);
+      this._didLongPress = false;
+    });
+
+    root.addEventListener('pointercancel', () => {
+      clearTimeout(this._longPressTimer);
+      this._didLongPress = false;
+      root.querySelectorAll('.vkb-key--pressing').forEach(b => b.classList.remove('vkb-key--pressing'));
+    });
+
+    // Se o dedo saiu do botão específico durante long-press
+    root.addEventListener('pointerleave', e => {
+      if (e.target.closest('[data-key]')) {
+        clearTimeout(this._longPressTimer);
+        this._didLongPress = false;
+        root.querySelectorAll('.vkb-key--pressing').forEach(b => b.classList.remove('vkb-key--pressing'));
       }
-      this._didLongPress = false;
-    });
-
-    // Cancelar pressão longa se o dedo saiu da tecla
-    el.addEventListener('pointerleave', e => {
-      clearTimeout(this._longPressTimer);
-      this._didLongPress = false;
-      el.querySelectorAll('.pressing').forEach(b => b.classList.remove('pressing'));
     }, true);
-
-    el.addEventListener('pointercancel', () => {
-      clearTimeout(this._longPressTimer);
-      this._didLongPress = false;
-      el.querySelectorAll('.pressing').forEach(b => b.classList.remove('pressing'));
-    });
   }
 
   _handleKey(key) {
@@ -181,7 +174,6 @@ class VirtualKeyboard {
         break;
 
       case 'ACCENT':
-        // Botão Á → abre painel com todos os acentos
         this._openAccentPanel(null);
         break;
 
@@ -199,19 +191,15 @@ class VirtualKeyboard {
 
       default:
         if (this._accentFlat.includes(key)) {
-          // Caractere acentuado vindo do painel
+          // Veio do painel de acentos
           this._append(key);
           this._closeAccentPanel();
         } else {
-          // Letra normal (toque rápido, SEM abrir painel)
+          // Toque rápido → letra normal
           const ch = this._shift ? key.toUpperCase() : key.toLowerCase();
           this._append(ch);
           if (this._shift) { this._shift = false; this._updateShift(); }
-          // Esconde dica após primeira digitação
-          if (this._hintEl) {
-            this._hintEl.style.opacity = '0';
-            setTimeout(() => { if (this._hintEl) this._hintEl.style.display = 'none'; }, 400);
-          }
+          this._hideHint();
         }
     }
   }
@@ -227,17 +215,18 @@ class VirtualKeyboard {
   _openAccentPanel(letterBase) {
     let chars;
     if (letterBase) {
-      chars = [letterBase, ...this._accentMap[letterBase]]; // letra normal PRIMEIRO
-      this._accentTitle.textContent = `"${letterBase.toUpperCase()}" — escolha a variante`;
+      // Inclui a letra SEM acento como primeira opção
+      chars = [letterBase, ...this._accentMap[letterBase]];
+      this._accentTitle.textContent = `"${letterBase.toUpperCase()}" — escolha a variante:`;
     } else {
       chars = this._accentFlat;
-      this._accentTitle.textContent = 'Escolha o caractere especial';
+      this._accentTitle.textContent = 'Escolha o caractere especial:';
     }
 
     this._accentGrid.innerHTML = chars.map(ch => {
-      const label = ch === letterBase ? `${ch} (sem acento)` : ch;
-      return `<button class="vkb-key vkb-key--char ${ch === letterBase ? 'vkb-key--char-base' : ''}"
-                data-key="${ch}" aria-label="${label}">${ch}</button>`;
+      const isBase = ch === letterBase;
+      return `<button class="vkb-key vkb-key--char${isBase ? ' vkb-key--char-base' : ''}"
+        data-key="${ch}" title="${isBase ? 'sem acento' : ch}">${ch}</button>`;
     }).join('');
 
     this._accentPanel.classList.add('open');
@@ -253,9 +242,13 @@ class VirtualKeyboard {
 
   _updateDisplay() {
     const txt = this._value;
-    this._displayText.innerHTML =
-      (txt ? `<span class="vkb-display__chars">${this._escapeHtml(txt)}</span>` : '') +
-      '<span class="vkb-cursor"></span>';
+    // Usa textContent para evitar reflow de innerHTML desnecessário
+    if (txt) {
+      this._displayInner.innerHTML =
+        `<span class="vkb-display__chars">${this._esc(txt)}</span><span class="vkb-cursor"></span>`;
+    } else {
+      this._displayInner.innerHTML = `<span class="vkb-placeholder">Digite aqui...</span><span class="vkb-cursor"></span>`;
+    }
   }
 
   _updateShift() {
@@ -266,32 +259,49 @@ class VirtualKeyboard {
       }
     });
     const shiftBtn = this._boardEl.querySelector('[data-key="SHIFT"]');
-    if (shiftBtn) shiftBtn.classList.toggle('vkb-key--shift-active', this._shift);
+    if (shiftBtn) shiftBtn.classList.toggle('vkb-key--shift-on', this._shift);
   }
 
-  _escapeHtml(s) {
+  _hideHint() {
+    if (!this._hintDone && this._hintEl) {
+      this._hintDone = true;
+      // visibility: hidden → ocupa espaço mas fica invisível → SEM layout shift
+      this._hintEl.style.visibility = 'hidden';
+    }
+  }
+
+  _esc(s) {
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
   /* ─── Public API ────────────────────────────────────────── */
 
-  getValue()  { return this._value; }
+  getValue() { return this._value; }
 
   reset() {
-    this._value = '';
-    this._shift = false;
+    this._value    = '';
+    this._shift    = false;
+    this._hintDone = false;
     this._closeAccentPanel();
     this._updateDisplay();
     this._updateShift();
-    if (this._hintEl) { this._hintEl.style.display = ''; this._hintEl.style.opacity = '1'; }
+    // Reexibe dica ao resetar
+    if (this._hintEl) this._hintEl.style.visibility = 'visible';
   }
 
   setEnabled(enabled) {
     this._enabled = enabled;
-    this._container.querySelectorAll('.vkb-key').forEach(b => b.disabled = !enabled);
-    const display = this._container.querySelector('#vkb-display');
-    if (display) display.classList.toggle('disabled', !enabled);
+    // Só muda pointer-events e opacidade → SEM mudança de layout
+    const board = this._container.querySelector('.vkb-board');
+    if (board) {
+      board.style.opacity        = enabled ? '1'    : '0.45';
+      board.style.pointerEvents  = enabled ? ''     : 'none';
+    }
+    const display = this._container.querySelector('.vkb-display');
+    if (display) {
+      display.style.opacity = enabled ? '1' : '0.7';
+    }
   }
 
-  focus() { /* teclado virtual não precisa de focus nativo */ }
+  focus() {}
 }

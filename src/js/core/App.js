@@ -14,6 +14,7 @@ class App {
     const storageService = new StorageService();
     const validationService = new ValidationService();
     const confettiService   = new ConfettiService();
+    const sentenceService   = new SentenceService();
 
     // ── Elementos DOM das telas ───────────────────────────
     const homeEl      = document.getElementById('screen-home');
@@ -29,7 +30,7 @@ class App {
       onStart: (count) => engine.startDictation(count),
     });
 
-    const dictationScreen = new DictationScreen(dictationEl, speechService, {
+    const dictationScreen = new DictationScreen(dictationEl, speechService, sentenceService, {
       onFinish: (session) => engine.finishDictation(session),
     });
 
