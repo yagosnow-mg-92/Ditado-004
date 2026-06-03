@@ -768,3 +768,559 @@
   font-size: var(--text-xl);
   color: var(--color-dark);
 }
+
+/* ════════════════════════════════════════════════
+   TECLADO VIRTUAL
+════════════════════════════════════════════════ */
+
+.vkb-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* ── Display da palavra ── */
+.vkb-display {
+  width: 100%;
+  min-height: 64px;
+  background: var(--color-off-white);
+  border: 3px solid var(--color-light-gray);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-sm) var(--space-lg);
+  box-sizing: border-box;
+  transition: border-color var(--transition-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.vkb-display:focus-within,
+.vkb-display.active {
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 4px rgba(74, 144, 217, 0.12);
+}
+
+.vkb-display__text {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  color: var(--color-dark);
+  letter-spacing: 2px;
+  text-align: center;
+  min-width: 4px;
+  word-break: break-all;
+}
+
+.vkb-display__text--empty::after {
+  content: 'Digite a palavra...';
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  color: var(--color-light-gray);
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.vkb-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.4em;
+  background: var(--color-blue);
+  margin-left: 2px;
+  border-radius: 2px;
+  animation: blink 1s step-end infinite;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* ── Teclado ── */
+.vkb-keyboard {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.vkb-keyboard--disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.vkb-row {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  width: 100%;
+}
+
+/* ── Tecla base ── */
+.vkb-key {
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  min-width: 30px;
+  flex: 1;
+  max-width: 52px;
+  background: var(--color-white);
+  border: 2px solid var(--color-light-gray);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 800;
+  color: var(--color-dark);
+  box-shadow: 0 2px 0 var(--color-light-gray);
+  transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  text-transform: uppercase;
+  box-sizing: border-box;
+}
+
+.vkb-key:hover {
+  background: var(--color-off-white);
+  border-color: var(--color-blue-light);
+}
+
+.vkb-key--pressed,
+.vkb-key:active {
+  background: var(--color-blue-light);
+  border-color: var(--color-blue);
+  transform: translateY(1px);
+  box-shadow: none;
+  color: var(--color-white);
+}
+
+/* ── Teclas especiais ── */
+.vkb-key--backspace {
+  background: var(--color-off-white);
+  color: var(--color-red);
+  border-color: var(--color-red-light);
+  font-size: var(--text-lg);
+  flex: 1.4;
+  max-width: 64px;
+}
+
+.vkb-key--backspace:hover {
+  background: rgba(224, 82, 82, 0.1);
+  border-color: var(--color-red);
+}
+
+.vkb-key--backspace.vkb-key--pressed {
+  background: var(--color-red);
+  color: var(--color-white);
+}
+
+.vkb-key--caps {
+  background: var(--color-off-white);
+  color: var(--color-blue-dark);
+  font-size: var(--text-sm);
+  flex: 1.4;
+  max-width: 64px;
+  letter-spacing: 0;
+}
+
+.vkb-key--caps-on {
+  background: var(--color-blue);
+  color: var(--color-white);
+  border-color: var(--color-blue-dark);
+}
+
+.vkb-key--digraph {
+  background: var(--color-off-white);
+  color: var(--color-blue-dark);
+  border-color: var(--color-blue-light);
+  font-size: var(--text-sm);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.vkb-key--digraph:hover {
+  background: rgba(74, 144, 217, 0.1);
+}
+
+/* ── Botão Confirmar no teclado ── */
+.vkb-key--confirm {
+  background: var(--grad-green);
+  color: var(--color-white);
+  border-color: var(--color-green-dark);
+  border-width: 2px;
+  font-size: var(--text-sm);
+  flex: 3;
+  max-width: 160px;
+  box-shadow: 0 2px 0 var(--color-green-dark);
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 900;
+}
+
+.vkb-key--confirm:hover {
+  background: var(--grad-green);
+  filter: brightness(1.05);
+}
+
+.vkb-key--confirm.vkb-key--pressed {
+  background: var(--color-green-dark);
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+.vkb-key--confirm:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Linha de acentos: letras menores ── */
+.vkb-row--3 .vkb-key,
+.vkb-row--4 .vkb-key {
+  font-size: var(--text-sm);
+  height: 38px;
+  text-transform: none;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .vkb-key {
+    height: 38px;
+    font-size: 0.8rem;
+    min-width: 24px;
+    border-radius: 6px;
+  }
+
+  .vkb-row {
+    gap: 3px;
+  }
+
+  .vkb-keyboard {
+    gap: 4px;
+  }
+
+  .vkb-display {
+    min-height: 54px;
+  }
+
+  .vkb-display__text {
+    font-size: var(--text-xl);
+  }
+
+  .vkb-key--confirm {
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .vkb-key {
+    height: 34px;
+    font-size: 0.72rem;
+    gap: 2px;
+  }
+
+  .vkb-row {
+    gap: 2px;
+  }
+}
+
+@media (min-width: 600px) {
+  .vkb-key {
+    height: 48px;
+    font-size: var(--text-lg);
+    max-width: 60px;
+  }
+
+  .vkb-key--backspace,
+  .vkb-key--caps {
+    max-width: 80px;
+  }
+
+  .vkb-key--confirm {
+    max-width: 200px;
+  }
+}
+
+/* ========================================================
+   TECLADO VIRTUAL
+   ======================================================== */
+
+.vkb-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ── Display da palavra ── */
+.vkb-display {
+  width: 100%;
+  min-height: 58px;
+  background: var(--color-off-white);
+  border: 3px solid var(--color-blue-light);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-sm) var(--space-md);
+  box-shadow: 0 0 0 4px rgba(74,144,217,0.12);
+  transition: border-color var(--transition-md);
+}
+
+.vkb-display.disabled {
+  border-color: var(--color-light-gray);
+  box-shadow: none;
+  opacity: 0.6;
+}
+
+.vkb-display__text {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  color: var(--color-dark);
+  letter-spacing: 2px;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+
+.vkb-display__chars {
+  letter-spacing: 2px;
+}
+
+/* Cursor piscante */
+.vkb-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.2em;
+  background: var(--color-blue);
+  border-radius: 2px;
+  animation: blink 1s step-end infinite;
+  margin-left: 2px;
+  vertical-align: middle;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* ── Board ── */
+.vkb-board {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.vkb-row {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+/* ── Teclas ── */
+.vkb-key {
+  all: unset;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--color-dark);
+  background: var(--color-white);
+  border: 2px solid var(--color-light-gray);
+  box-shadow: 0 3px 0 var(--color-light-gray);
+  transition: background var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.vkb-key:active,
+.vkb-key.pressed {
+  background: var(--color-light-gray);
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.vkb-key:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Teclas de ação (shift, back) */
+.vkb-key--action {
+  background: var(--color-off-white);
+  color: var(--color-dark);
+  font-size: 1.1rem;
+  flex: 1.5;
+}
+
+/* Shift ativo */
+.vkb-key--shift-active {
+  background: var(--color-blue-light) !important;
+  color: var(--color-white) !important;
+  border-color: var(--color-blue) !important;
+}
+
+/* Botão de acentos */
+.vkb-key--accent-btn {
+  background: var(--color-yellow-light);
+  border-color: var(--color-yellow);
+  color: var(--color-dark);
+  font-size: 1rem;
+  flex: 1.5;
+}
+
+/* Espaço */
+.vkb-key--space {
+  flex: 4;
+  font-size: 0.8rem;
+  color: var(--color-gray);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* Confirmar */
+.vkb-key--confirm {
+  flex: 2;
+  background: var(--grad-green);
+  color: var(--color-white);
+  border-color: var(--color-green-dark);
+  font-size: 0.95rem;
+  box-shadow: 0 3px 0 var(--color-green-dark);
+}
+
+.vkb-key--confirm:active {
+  background: var(--color-green-dark);
+  box-shadow: none;
+  transform: translateY(2px);
+}
+
+/* Tecla larga */
+.vkb-key--wide {
+  flex: none;
+  width: 100%;
+  height: 40px;
+  border-radius: var(--radius-md);
+  margin-top: var(--space-xs);
+}
+
+/* Fechar painel */
+.vkb-key--cancel {
+  background: var(--color-off-white);
+  color: var(--color-gray);
+  border-color: var(--color-light-gray);
+  font-size: 0.9rem;
+}
+
+/* ── Painel de acentos ── */
+.vkb-accent-panel {
+  display: none;
+  flex-direction: column;
+  gap: var(--space-sm);
+  background: var(--color-white);
+  border: 2.5px solid var(--color-yellow);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  box-shadow: var(--shadow-md);
+}
+
+.vkb-accent-panel.open {
+  display: flex;
+}
+
+.vkb-accent-title {
+  font-size: var(--text-sm);
+  color: var(--color-gray);
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vkb-accent-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.vkb-key--char {
+  flex: none;
+  width: 46px;
+  height: 46px;
+  font-size: 1.3rem;
+  border-radius: var(--radius-md);
+  background: var(--color-off-white);
+  border-color: var(--color-light-gray);
+}
+
+/* ── Responsivo ── */
+@media (max-width: 400px) {
+  .vkb-key {
+    height: 40px;
+    font-size: 0.9rem;
+    border-radius: 6px;
+  }
+
+  .vkb-row { gap: 4px; }
+  .vkb-board { gap: 4px; }
+
+  .vkb-display__text {
+    font-size: var(--text-xl);
+  }
+}
+
+@media (max-width: 340px) {
+  .vkb-key {
+    height: 36px;
+    font-size: 0.82rem;
+  }
+}
+
+@media (min-width: 600px) {
+  .vkb-key {
+    height: 50px;
+    font-size: 1.1rem;
+    border-radius: 10px;
+  }
+
+  .vkb-display__text {
+    font-size: var(--text-3xl);
+  }
+}
+
+/* ── Listen button full-width inside audio-zone ── */
+.btn--listen {
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--space-md) var(--space-xl);
+  font-size: var(--text-base);
+}
+
+/* ── Dictation card com teclado: menos padding, gap menor ── */
+.dictation-card {
+  gap: var(--space-md) !important;
+  padding: var(--space-md) !important;
+}
+
+/* screen-content no ditado não precisa de gap grande */
+.screen-content--dictation {
+  gap: var(--space-md);
+  padding-bottom: var(--space-md);
+}
