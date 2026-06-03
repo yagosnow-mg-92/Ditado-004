@@ -1324,3 +1324,45 @@
   gap: var(--space-md);
   padding-bottom: var(--space-md);
 }
+
+/* ── Dica de pressão longa ── */
+.vkb-hint {
+  font-size: var(--text-xs);
+  color: var(--color-gray);
+  text-align: center;
+  font-weight: 700;
+  padding: 2px 0;
+  transition: opacity 0.4s ease;
+}
+
+/* ── Teclas com acento disponível: ponto indicador ── */
+.vkb-key--has-accent {
+  position: relative;
+}
+
+.vkb-key--has-accent::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  right: 5px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--color-blue-light);
+}
+
+/* ── Animação de pressão longa ── */
+.vkb-key.pressing {
+  background: var(--color-blue-light) !important;
+  color: var(--color-white) !important;
+  transform: scale(0.93);
+  transition: transform 0.1s, background 0.1s;
+}
+
+/* ── Letra base no painel (sem acento) destacada ── */
+.vkb-key--char-base {
+  background: var(--color-blue) !important;
+  color: var(--color-white) !important;
+  border-color: var(--color-blue-dark) !important;
+  font-weight: 900;
+}
