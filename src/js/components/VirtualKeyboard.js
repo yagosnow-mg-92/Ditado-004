@@ -195,7 +195,7 @@ class VirtualKeyboard {
 
     this._accentGrid.innerHTML = chars.map(ch => {
       const isBase = ch === letterBase;
-      return `<button class="vkb-key vkb-key--char${isBase ? ' vkb-key--char-base' : ''}"
+      return `<button class="vkb-key vkb-key--char"
         data-key="${ch}" title="${isBase ? ch + ' (sem acento)' : ch}">${ch}</button>`;
     }).join('');
 
