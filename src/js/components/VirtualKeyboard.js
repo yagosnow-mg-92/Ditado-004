@@ -1,11 +1,10 @@
 /**
  * VirtualKeyboard - Teclado virtual em português.
  *
- * Comportamento das teclas com variante:
- *  - UM toque simples → abre painel de variantes imediatamente
- *  - No painel a primeira opção é sempre a letra SEM acento
- *
- * Tecla hífen incluída na última linha.
+ * Comportamento:
+ *  - Toque rápido  → digita a letra normalmente
+ *  - Pressão longa (400ms) → abre painel APENAS com as variantes acentuadas
+ *  - Botão Á → abre painel com todos os caracteres especiais
  */
 class VirtualKeyboard {
   constructor(container, { onConfirm, onChange }) {
@@ -17,7 +16,7 @@ class VirtualKeyboard {
     this._shift   = false;
     this._enabled = true;
 
-    // Teclas que abrem painel de variantes ao toque
+    // Apenas as variantes acentuadas (sem a letra base)
     this._accentMap = {
       a: ['á','â','ã','à'],
       e: ['é','ê','è'],
@@ -28,6 +27,10 @@ class VirtualKeyboard {
       n: ['ñ'],
     };
     this._accentFlat = Object.values(this._accentMap).flat();
+
+    this._longPressDelay = 400;
+    this._longPressTimer = null;
+    this._didLongPress   = false;
 
     this._rows = [
       ['q','w','e','r','t','y','u','i','o','p'],
@@ -49,7 +52,7 @@ class VirtualKeyboard {
           <span class="vkb-display__inner" id="vkb-text"></span>
         </div>
 
-        <!-- Espaçador fixo: garante que o teclado não pule ao esconder a dica -->
+        <!-- espaçador fixo para não deslocar o teclado -->
         <div class="vkb-hint-spacer"></div>
 
         <div class="vkb-board" id="vkb-board">
@@ -62,7 +65,7 @@ class VirtualKeyboard {
 
         <!-- Painel de variantes: position absolute, não empurra nada -->
         <div class="vkb-accent-panel" id="vkb-accent-panel" aria-hidden="true">
-          <p class="vkb-accent-title" id="vkb-accent-title">Escolha a variante</p>
+          <p class="vkb-accent-title" id="vkb-accent-title">Escolha o acento</p>
           <div class="vkb-accent-grid" id="vkb-accent-grid"></div>
           <button class="vkb-key vkb-key--cancel-accent" data-key="ACCENT_CLOSE">✕ Fechar</button>
         </div>
@@ -88,7 +91,7 @@ class VirtualKeyboard {
       case 'BACK':
         return `<button class="vkb-key vkb-key--action" data-key="BACK" aria-label="Apagar">⌫</button>`;
       case 'ACCENT':
-        return `<button class="vkb-key vkb-key--accent-btn" data-key="ACCENT" aria-label="Todos os acentos">Á</button>`;
+        return `<button class="vkb-key vkb-key--accent-btn" data-key="ACCENT" aria-label="Acentos">Á</button>`;
       case 'HYPHEN':
         return `<button class="vkb-key vkb-key--hyphen" data-key="HYPHEN" aria-label="Hífen">-</button>`;
       case 'SPACE':
@@ -105,13 +108,7 @@ class VirtualKeyboard {
   _bindEvents() {
     const root = this._container;
 
-    // Um único listener em pointerup — toque simples ativa tudo
     root.addEventListener('pointerdown', e => {
-      const btn = e.target.closest('[data-key]');
-      if (btn) e.preventDefault();
-    });
-
-    root.addEventListener('pointerup', e => {
       const btn = e.target.closest('[data-key]');
       if (!btn) return;
       e.preventDefault();
@@ -119,13 +116,48 @@ class VirtualKeyboard {
       const key = btn.dataset.key;
       if (!this._enabled && key !== 'ACCENT_CLOSE') return;
 
-      // fromPanel=true quando o clique veio do painel de variantes
-      const fromPanel = btn.dataset.accentChar === '1';
-      this._handleKey(key, fromPanel);
+      // Inicia long-press apenas para teclas com variantes
+      if (this._accentMap[key]) {
+        this._didLongPress = false;
+        btn.classList.add('vkb-key--pressing');
+        this._longPressTimer = setTimeout(() => {
+          this._didLongPress = true;
+          btn.classList.remove('vkb-key--pressing');
+          this._openAccentPanel(key);
+        }, this._longPressDelay);
+      }
     });
+
+    root.addEventListener('pointerup', e => {
+      const btn = e.target.closest('[data-key]');
+      clearTimeout(this._longPressTimer);
+      if (!btn) return;
+      e.preventDefault();
+
+      btn.classList.remove('vkb-key--pressing');
+      const key = btn.dataset.key;
+      if (!this._enabled && key !== 'ACCENT_CLOSE') { this._didLongPress = false; return; }
+
+      if (!this._didLongPress) this._handleKey(key);
+      this._didLongPress = false;
+    });
+
+    root.addEventListener('pointercancel', () => {
+      clearTimeout(this._longPressTimer);
+      this._didLongPress = false;
+      root.querySelectorAll('.vkb-key--pressing').forEach(b => b.classList.remove('vkb-key--pressing'));
+    });
+
+    root.addEventListener('pointerleave', e => {
+      if (e.target.closest && e.target.closest('[data-key]')) {
+        clearTimeout(this._longPressTimer);
+        this._didLongPress = false;
+        root.querySelectorAll('.vkb-key--pressing').forEach(b => b.classList.remove('vkb-key--pressing'));
+      }
+    }, true);
   }
 
-  _handleKey(key, fromPanel = false) {
+  _handleKey(key) {
     switch (key) {
       case 'SHIFT':
         this._shift = !this._shift;
@@ -139,7 +171,6 @@ class VirtualKeyboard {
         break;
 
       case 'ACCENT':
-        // Botão Á → todos os acentos
         this._openAccentPanel(null);
         break;
 
@@ -161,14 +192,11 @@ class VirtualKeyboard {
 
       default:
         if (this._accentFlat.includes(key)) {
-          // Caractere vindo do painel
+          // Veio do painel de variantes
           this._append(key);
           this._closeAccentPanel();
-        } else if (!fromPanel && this._accentMap[key]) {
-          // Tecla do teclado principal com variantes → abre painel
-          this._openAccentPanel(key);
         } else {
-          // Letra normal
+          // Letra normal (toque rápido)
           const ch = this._shift ? key.toUpperCase() : key.toLowerCase();
           this._append(ch);
           if (this._shift) { this._shift = false; this._updateShift(); }
@@ -187,19 +215,17 @@ class VirtualKeyboard {
   _openAccentPanel(letterBase) {
     let chars;
     if (letterBase) {
-      // Letra SEM acento SEMPRE em primeiro
-      chars = [letterBase, ...this._accentMap[letterBase]];
-      this._accentTitle.textContent = `"${letterBase.toUpperCase()}" — escolha:`;
+      // Somente as variantes acentuadas — sem a letra base
+      chars = this._accentMap[letterBase];
+      this._accentTitle.textContent = `Variantes de "${letterBase.toUpperCase()}":`;
     } else {
       chars = this._accentFlat;
       this._accentTitle.textContent = 'Caracteres especiais:';
     }
 
-    this._accentGrid.innerHTML = chars.map(ch => {
-      const isBase = ch === letterBase;
-      return `<button class="vkb-key vkb-key--char"
-        data-key="${ch}" data-accent-char="1" title="${isBase ? ch + ' (sem acento)' : ch}">${ch}</button>`;
-    }).join('');
+    this._accentGrid.innerHTML = chars.map(ch =>
+      `<button class="vkb-key vkb-key--char" data-key="${ch}">${ch}</button>`
+    ).join('');
 
     this._accentPanel.classList.add('open');
     this._accentPanel.setAttribute('aria-hidden', 'false');
@@ -220,7 +246,9 @@ class VirtualKeyboard {
   }
 
   _updateShift() {
-    this._boardEl.querySelectorAll('.vkb-key:not([data-key="SHIFT"]):not([data-key="BACK"]):not([data-key="ACCENT"]):not([data-key="HYPHEN"]):not([data-key="SPACE"]):not([data-key="CONFIRM"])').forEach(btn => {
+    this._boardEl.querySelectorAll(
+      '.vkb-key:not([data-key="SHIFT"]):not([data-key="BACK"]):not([data-key="ACCENT"]):not([data-key="HYPHEN"]):not([data-key="SPACE"]):not([data-key="CONFIRM"])'
+    ).forEach(btn => {
       const k = btn.dataset.key;
       if (k && k.length === 1 && !this._accentFlat.includes(k)) {
         btn.textContent = this._shift ? k.toUpperCase() : k.toLowerCase();
