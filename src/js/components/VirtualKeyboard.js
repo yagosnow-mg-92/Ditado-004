@@ -119,11 +119,13 @@ class VirtualKeyboard {
       const key = btn.dataset.key;
       if (!this._enabled && key !== 'ACCENT_CLOSE') return;
 
-      this._handleKey(key);
+      // fromPanel=true quando o clique veio do painel de variantes
+      const fromPanel = btn.dataset.accentChar === '1';
+      this._handleKey(key, fromPanel);
     });
   }
 
-  _handleKey(key) {
+  _handleKey(key, fromPanel = false) {
     switch (key) {
       case 'SHIFT':
         this._shift = !this._shift;
@@ -162,8 +164,8 @@ class VirtualKeyboard {
           // Caractere vindo do painel
           this._append(key);
           this._closeAccentPanel();
-        } else if (this._accentMap[key]) {
-          // Tecla com variantes → abre painel imediatamente (toque simples)
+        } else if (!fromPanel && this._accentMap[key]) {
+          // Tecla do teclado principal com variantes → abre painel
           this._openAccentPanel(key);
         } else {
           // Letra normal
@@ -196,7 +198,7 @@ class VirtualKeyboard {
     this._accentGrid.innerHTML = chars.map(ch => {
       const isBase = ch === letterBase;
       return `<button class="vkb-key vkb-key--char"
-        data-key="${ch}" title="${isBase ? ch + ' (sem acento)' : ch}">${ch}</button>`;
+        data-key="${ch}" data-accent-char="1" title="${isBase ? ch + ' (sem acento)' : ch}">${ch}</button>`;
     }).join('');
 
     this._accentPanel.classList.add('open');
