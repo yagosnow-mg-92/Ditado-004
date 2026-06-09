@@ -1119,17 +1119,21 @@
   50%       { opacity: 0; }
 }
 
-/* ── Dica: ocupa espaço fixo, apenas visibility muda ── */
-.vkb-hint {
-  height: 18px;               /* altura fixa */
-  font-size: 0.72rem;
-  color: var(--color-gray);
-  text-align: center;
-  font-weight: 700;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  /* visibility toggled via JS — não muda layout */
+
+
+/* ── Hífen ── */
+.vkb-key--hyphen {
+  flex: 1.2;
+  font-size: 1.4rem;
+  font-weight: 900;
+  background: #f0f4f8;
+  border-color: var(--color-light-gray);
+}
+
+/* ── Espaçador fixo (substitui dica removida) ── */
+.vkb-hint-spacer {
+  height: 6px;
+  flex-shrink: 0;
 }
 
 /* ── Board: dimensões totalmente estáticas ── */
@@ -1316,7 +1320,6 @@
 
 @media (max-width: 340px) {
   .vkb-key        { height: 36px; font-size: 0.8rem; border-radius: 6px; }
-  .vkb-hint       { font-size: 0.65rem; }
 }
 
 @media (min-width: 600px) {
