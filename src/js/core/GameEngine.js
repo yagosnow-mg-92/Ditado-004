@@ -41,14 +41,15 @@ class GameEngine {
    * Inicia um ditado com N palavras.
    * @param {number} wordCount
    */
-  startDictation(wordCount) {
-    const words   = this._wordService.createSessionWords(wordCount);
+  startDictation(wordCount, nivel = 'facil') {
+    const words   = this._wordService.createSessionWords(wordCount, nivel);
     const session = new GameSession(words);
     this._currentSession = session;
 
+    this._currentNivel = nivel;
     this._homeScreen.hide();
     this._dictationScreen.show();
-    this._dictationScreen.startSession(session);
+    this._dictationScreen.startSession(session, nivel);
   }
 
   /**

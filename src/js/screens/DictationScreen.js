@@ -11,13 +11,15 @@ class DictationScreen {
     this._sentences       = sentenceService;
     this._onFinish        = onFinish;
     this._session         = null;
+    this._nivel           = 'facil';
     this._progressBar     = null;
     this._keyboard        = null;
     this._isSpeaking      = false;
   }
 
-  startSession(session) {
+  startSession(session, nivel = 'facil') {
     this._session = session;
+    this._nivel   = nivel;
     this._render();
     this._bindEvents();
     this._loadWord();
@@ -27,11 +29,17 @@ class DictationScreen {
     this._el.innerHTML = `
       <div class="screen-content screen-content--dictation">
 
-        <!-- Barra de progresso -->
-        <div id="progress-container" style="width:100%;"></div>
+        <!-- Badge de nível + Barra de progresso -->
+        <div style="width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;">
+          <div id="progress-container" style="flex:1;"></div>
+          <span class="nivel-badge nivel-badge--{{this._nivel}}" id="nivel-badge"></span>
+        </div>
 
         <!-- Card de ditado -->
         <div class="dictation-card">
+
+          <!-- Badge de nível -->
+          <div class="nivel-badge-row" id="nivel-badge-row"></div>
 
           <!-- Ondas de áudio -->
           <div class="audio-wave idle" id="audio-wave">
@@ -75,6 +83,13 @@ class DictationScreen {
     });
 
     this._audioWave = this._el.querySelector('#audio-wave');
+
+    // Badge de nível
+    const nivelLabels = { facil: '🟢 Fácil', medio: '🟡 Médio', dificil: '🔴 Difícil' };
+    const badgeRow = this._el.querySelector('#nivel-badge-row');
+    if (badgeRow) {
+      badgeRow.innerHTML = `<span class="nivel-badge nivel-badge--${this._nivel}">${nivelLabels[this._nivel] || ''}</span>`;
+    }
   }
 
   _bindEvents() {

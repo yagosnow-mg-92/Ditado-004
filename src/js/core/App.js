@@ -27,7 +27,7 @@ class App {
 
     // ── Telas ─────────────────────────────────────────────
     const homeScreen = new HomeScreen(homeEl, storageService, {
-      onStart: (count) => engine.startDictation(count),
+      onStart: (count, nivel) => engine.startDictation(count, nivel),
     });
 
     const dictationScreen = new DictationScreen(dictationEl, speechService, sentenceService, {
