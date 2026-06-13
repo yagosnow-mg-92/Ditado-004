@@ -61,7 +61,7 @@ class GameEngine {
 
     this._dictationScreen.hide();
     this._resultScreen.show();
-    this._resultScreen.showResult(session);
+    this._resultScreen.showResult(session, this._currentNivel || 'facil');
   }
 
   /** Reinicia para a tela inicial */

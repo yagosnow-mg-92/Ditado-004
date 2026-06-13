@@ -15,6 +15,7 @@ class App {
     const validationService = new ValidationService();
     const confettiService   = new ConfettiService();
     const sentenceService   = new SentenceService();
+    const shareService      = new ShareService();
 
     // ── Elementos DOM das telas ───────────────────────────
     const homeEl      = document.getElementById('screen-home');
@@ -34,7 +35,7 @@ class App {
       onFinish: (session) => engine.finishDictation(session),
     });
 
-    const resultScreen = new ResultScreen(resultEl, validationService, confettiService, {
+    const resultScreen = new ResultScreen(resultEl, validationService, confettiService, shareService, {
       onRestart: () => engine.restart(),
     });
 
